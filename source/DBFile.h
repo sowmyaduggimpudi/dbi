@@ -7,6 +7,10 @@
 #include "File.h"
 #include "Comparison.h"
 #include "ComparisonEngine.h"
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
 
 typedef enum {heap, sorted, tree} fType;
 
@@ -17,7 +21,8 @@ private:
 	File file;
 	Page currPage;
 	fType fileType;
-	long pNum; 
+	int pNum; 
+	bool is_pDirty;
 
 public:
 	DBFile (); 
