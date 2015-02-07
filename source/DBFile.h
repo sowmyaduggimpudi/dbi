@@ -17,7 +17,7 @@ private:
 	File file;
 	Page currPage;
 	fType fileType;
-	long 
+	long pNum; 
 
 public:
 	DBFile (); 
