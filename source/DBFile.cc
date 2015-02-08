@@ -18,8 +18,12 @@ int DBFile::Create (char *f_path, fType f_type, void *startup) {
 	mfile.append(f_path);
 	file.Open(0, f_path);
 	fileType = f_type;
-	if(fileType != heap)
+	if(fileType != heap) {
 		cerr << __func__ << "The file type is not heap\n";
+		return 0;
+	}
+
+	return 1;
 }
 
 void DBFile::Load (Schema &f_schema, char *loadpath) {	
@@ -28,9 +32,6 @@ void DBFile::Load (Schema &f_schema, char *loadpath) {
 
 	while (temp.SuckNextRecord (&f_schema, tblFile) == 1)
 		Add(temp);
-	cout<<"\n\n";
-	cout<<__func__<<fileType<<" "<<pNum <<" " <<file.GetLength()<<endl;
-	cout<<"\n\n";
 }
 
 int DBFile::Open (char *f_path) {
@@ -49,13 +50,11 @@ int DBFile::Open (char *f_path) {
 	fileType = (fType) f_type;
 	mfile_ifs >> pNum ;
 	mfile_ifs >> numPages;
-	cout<<__func__<<fileType<<" "<<pNum <<" " <<numPages<<endl;
 	file.Open(numPages, f_path);
 	mfile_ifs.close();
 }
 
 void DBFile::MoveFirst () {
-	cout<<__func__<<":"<<__LINE__<< ":  "<<fileType<<" "<<pNum <<" " <<numPages<<endl;
 	if (pNum == 0)
 		return;
 
@@ -63,7 +62,6 @@ void DBFile::MoveFirst () {
 		file.AddPage(&currPage, pNum);	
 	pNum = 0;
 	file.GetPage(&currPage, pNum);
-	cout<<__func__<<":"<<__LINE__<< ":  "<<fileType<<" "<<pNum <<" " <<numPages<<endl;
 }
 
 int DBFile::Close () {
@@ -84,7 +82,6 @@ int DBFile::Close () {
 	mfile_ofs << pNum << endl;
 	mfile_ofs << numPages << endl;
 	mfile_ofs.close();
-	cout<<__func__<<fileType<<" "<<pNum <<" " <<numPages<<endl;
 	
 	return numPages;
 }
@@ -103,8 +100,6 @@ int DBFile::GetNext (Record &fetchme) {
 	if (currPage.GetFirst(&fetchme)) {
 		return 1;
 	} else {
-		cout<<__func__<<":"<<__LINE__<< ":  ";
-		cout<<pNum <<" " << file.GetLength();
 		if (pNum + 1 >= (file.GetLength()-1))
 			return 0;
 		pNum++;
