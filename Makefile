@@ -75,6 +75,7 @@ unittest: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.ta
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o$@
 	mv *.o bin/
 	mv unittest bin/
+	./bin/unittest
 
 test: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o
 	$(CC) -o bin/test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o -lfl
