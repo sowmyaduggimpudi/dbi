@@ -18,6 +18,8 @@ int DBFile::Create (char *f_path, fType f_type, void *startup) {
 	mfile.append(f_path);
 	file.Open(0, f_path);
 	fileType = f_type;
+	if(fileType != heap)
+		cerr << __func__ << "The file type is not heap\n";
 }
 
 void DBFile::Load (Schema &f_schema, char *loadpath) {	
@@ -103,7 +105,7 @@ int DBFile::GetNext (Record &fetchme) {
 	} else {
 		cout<<__func__<<":"<<__LINE__<< ":  ";
 		cout<<pNum <<" " << file.GetLength();
-		if (pNum + 1 >= (file.GetLength() -1))
+		if (pNum + 1 >= (file.GetLength()-1))
 			return 0;
 		pNum++;
 		file.GetPage(&currPage, pNum);
