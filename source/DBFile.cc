@@ -15,7 +15,11 @@ DBFile::DBFile ()
 }
 
 int DBFile::Create (char *f_path, fType f_type, void *startup) {
-	mfile.append(f_path);
+	if (mfile.empty()) {
+		mfile.append(f_path);
+		mfile.append(".metadata");
+	}
+
 	file.Open(0, f_path);
 	fileType = f_type;
 	if(fileType != heap) {
@@ -36,13 +40,22 @@ void DBFile::Load (Schema &f_schema, char *loadpath) {
 
 int DBFile::Open (char *f_path) {
 	int f_type;
+	struct stat buff;
 
-	mfile.append(f_path);
-	mfile.append(".metadata");
+	if (mfile.empty()) {
+		mfile.append(f_path);
+		mfile.append(".metadata");
+	}
+
+	if (stat(mfile.c_str(), &buff) != 0) {
+		cerr << __func__ << "meta file doesn't exist\n";
+		return 0;
+	}
+
 	ifstream mfile_ifs(mfile.c_str());
 
 	if (!mfile_ifs.is_open()) {
-		cerr << __func__ << "Open metadata file failed\n";
+		cerr << __func__ << "metadata file failed\n";
 		return 0;
 	}
 
@@ -52,6 +65,8 @@ int DBFile::Open (char *f_path) {
 	mfile_ifs >> numPages;
 	file.Open(numPages, f_path);
 	mfile_ifs.close();
+
+	return 1;
 }
 
 void DBFile::MoveFirst () {
@@ -69,11 +84,10 @@ int DBFile::Close () {
 		file.AddPage(&currPage, pNum);	
 		pNum++;
 	}
-	mfile.append(".metadata");
 	ofstream mfile_ofs(mfile.c_str());
 
 	if (!mfile_ofs.is_open()) {
-		cerr << "Open metadata file failed\n";
+		cerr << __func__<<": metadata file failed\n";
 		return 0;
 	}
 
