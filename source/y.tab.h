@@ -66,7 +66,7 @@ extern int yydebug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 20 "source/Parser.y" /* yacc.c:1909  */
+#line 20 "Parser.y" /* yacc.c:1909  */
 
  	struct Operand *myOperand;
 	struct ComparisonOp *myComparison; 

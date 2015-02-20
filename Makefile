@@ -80,8 +80,11 @@ unittest: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.ta
 test: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o
 	$(CC) -o bin/test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o -lfl
 	rm -f *.o
-	./bin/test.out
-	
+
+test2: BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test2.o
+	$(CC) -o bin/test2 BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test2.o -lfl -lpthread
+	rm -f *.o
+
 main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o y.tab.o lex.yy.o main.o
 	$(CC) -o bin/main Record.o Comparison.o ComparisonEngine.o Schema.o File.o y.tab.o lex.yy.o main.o -lfl
 	rm -f *.o
@@ -91,6 +94,15 @@ unittest.o: source/unittest.cc \
 		$(FUSED_GTEST_H)
 	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
 	source/unittest.cc
+
+Pipe.o: source/Pipe.cc
+	$(CC) -g -c source/Pipe.cc
+
+BigQ.o: source/BigQ.cc
+	$(CC) -g -c source/BigQ.cc
+
+test2.o: source/test2.cc
+	$(CC) -g -c source/test2.cc
 
 test.o: source/test.cc
 	$(CC) -g -c source/test.cc
