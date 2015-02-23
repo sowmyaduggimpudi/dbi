@@ -26,6 +26,9 @@ Page :: ~Page () {
 	delete myRecs;
 }
 
+int Page :: GetNumRecs () {
+	return numRecs;
+}
 
 void Page :: EmptyItOut () {
 

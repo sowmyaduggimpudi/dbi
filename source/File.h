@@ -41,6 +41,7 @@ public:
 
 	// empty it out
 	void EmptyItOut ();
+	int GetNumRecs();
 
 };
 

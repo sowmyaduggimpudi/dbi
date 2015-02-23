@@ -77,6 +77,7 @@ void DBFile::MoveFirst () {
 		file.AddPage(&currPage, pNum);	
 	pNum = 0;
 	file.GetPage(&currPage, pNum);
+	pNum++;
 }
 
 int DBFile::Close () {
