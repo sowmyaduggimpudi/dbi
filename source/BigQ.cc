@@ -1,13 +1,12 @@
 #include "BigQ.h"
 
-#define PRINT cout<<__func__<<": "<<__LINE__<<endl;
+//#define PRINT cout<<__func__<<": "<<__LINE__<<endl;
+#define PRINT cout<<__LINE__<<endl;
+#define debug 0
 static int actRecs;
 //static Schema mySchema("catalog", "nation");
 
 BigQ::BigQ(){
-inPipe = new Pipe(100);
-outPipe = new Pipe(100);
-runLength=0; 
 }
 
 BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen)
@@ -18,6 +17,7 @@ BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen)
         sortedOrder= &sortorder;
 	pthread_t thread;
 	pNum = 0;
+	noOfRuns=0;
 	pageFilled = 0;
         pthread_create(&thread, NULL, &beginSortProcess,(void*)this);
 	sortFile.Open(0, "sortFile_temp.bin");  
@@ -27,7 +27,8 @@ void BigQ::internalSort() {
         
         Record recFromPipe;
         vector<Record*> sortVector;
-        int noOfRuns=0;
+//       int noOfRuns=0;
+//	int totalPages=0;
 
 while(true)
 
@@ -41,7 +42,7 @@ while(true)
 		else
 		{
 			sort(sortVector.begin(),sortVector.end(), CompareMyRecords(sortedOrder));
-			
+
 			noOfRuns=noOfRuns+1;
 			insertInFile(sortVector);
 			break;
@@ -55,7 +56,7 @@ while(true)
 		if(pageFilled == runLength)
 		{ 
 		noOfRuns=noOfRuns+1;
-		sort(sortVector.begin(),sortVector.end(), CompareMyRecords(sortedOrder));
+	sort(sortVector.begin(),sortVector.end(), CompareMyRecords(sortedOrder));
 		pageFilled = 0;
 		insertInFile(sortVector);
 		}
@@ -66,8 +67,11 @@ while(true)
 
 
 }
-	cout<< "Act Records : "<<actRecs<<endl ;
+	mergeRuns();
 	outPipe->ShutDown();
+	sortFile.Close();
+	remove("sortFile_temp.bin");  
+
 }
 void BigQ:: insertInFile(vector<Record*> &sortVector)
 {
@@ -75,9 +79,10 @@ void BigQ:: insertInFile(vector<Record*> &sortVector)
 	int length= sortVector.size();
         vector<Record*> dupVector;
 	int currRunLen = 0;
+	Record testRec;
 	while(!sortVector.empty())
 	{
-		//sortVector.front()->Print(&mySchema);
+		
 		if(!currPage.Append(sortVector.front()))
 		{
 			if(currRunLen==runLength)
@@ -116,11 +121,13 @@ void BigQ:: insertInFile(vector<Record*> &sortVector)
 
 	sortVector.clear();
 	sortVector=dupVector;
+	return;
 	}
 		
 	else
 	{
 	 sortFile.AddPage(&currPage, pNum);
+	
 	 actRecs += currPage.GetNumRecs();
        	 pNum++;
 	 currRunLen++;
@@ -132,13 +139,114 @@ void BigQ:: insertInFile(vector<Record*> &sortVector)
 		currRunLen++;
 				
 		actRecs += currPage.GetNumRecs();
-//		PRINT
          
 	}
 	}
 	sortVector.clear();
-//	PRINT
+	
+}
 
+int BigQ::mergeRuns()
+{
+	
+	Record firstRecord;
+	Page *topPage = new Page[noOfRuns];
+	int *pageNum = new int[noOfRuns];
+	Record *R = new Record[noOfRuns];
+	bool *isRunDone= new bool[noOfRuns];
+	int minRun;
+	int recsInOutPipe=0;
+
+#if debug
+	off_t wPage = 0;
+	Record RR;
+	Page PP;
+	sortFile.GetPage(&PP, wPage); 
+	wPage++;
+	cout<<"Tot Pages pNum: "<<pNum<<endl;
+	while(wPage < pNum) {
+		while(!PP.GetFirst(&RR)) {
+			if(wPage == pNum -1)
+				goto out;
+			sortFile.GetPage(&PP, wPage); 
+			wPage++;
+		}
+
+                outPipe->Insert(&RR);
+	}
+out:
+return 0;
+#endif
+
+	for(int i=0; i<noOfRuns; i++)
+	{
+                pageNum[i]=0;
+		isRunDone[i]=0;
+		sortFile.GetPage(&topPage[i],(off_t)(i*runLength));
+		topPage[i].GetFirst(&R[i]);
+	}
+
+	while(true)
+	{
+		minRun = minIndex(R, isRunDone);
+		if(minRun== -1)
+			break;
+                outPipe->Insert(&R[minRun]);
+		recsInOutPipe++;
+		while(!topPage[minRun].GetFirst(&R[minRun]))
+		{	
+			if(pageNum[minRun] == runLength -1)
+				{isRunDone[minRun]=1; break;}
+			else
+			{
+			pageNum[minRun]++;
+			sortFile.GetPage(&topPage[minRun],(off_t)((minRun*runLength)+pageNum[minRun]));
+
+			}
+
+		}
+
+	}
+
+	delete [] topPage;
+	delete [] R;
+	delete [] pageNum;
+	delete [] isRunDone;
+}
+
+int BigQ:: minIndex(Record*R, bool* isRunDone)
+{
+
+        int i = 0;
+        int min = -1;
+        ComparisonEngine ceng;
+
+        i = 0;
+        while (i < noOfRuns) {
+                if (!isRunDone[i]) {
+                        min = i;
+                        i++;
+                        break;
+                }
+                i++;
+        }
+
+        if (min == -1)
+                return min;
+
+        while (i < noOfRuns) {
+	//cout<<"i:  "<< i << "NoOfRuns: "<< noOfRuns<<endl;
+                if (isRunDone[i]) {
+                	i++;
+                        continue;
+		}
+
+                if (ceng.Compare(&R[min], &R[i], sortedOrder) > 0)
+                        min = i;
+                i++;
+        }
+
+        return min;
 }
 
 

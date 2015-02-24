@@ -23,6 +23,7 @@ Page currPage;
 Page tempPage;
 int pageFilled;
 int pNum;
+int noOfRuns;
 //string 
 //ComparisionEngine
 //vector<int> 
@@ -35,7 +36,8 @@ File sortFile;
 string sortFileName;
 static void* beginSortProcess(void*);
 void internalSort();
-
+int mergeRuns();
+int minIndex(Record*, bool*);
 
 
 struct CompareMyRecords
@@ -49,7 +51,7 @@ struct CompareMyRecords
             Record* r22 = const_cast<Record*>(r2);
 	
             ComparisonEngine ce;
-            if (ce.Compare(r11, r22, pSortOrder) < 0)
+            if (ce.Compare(r22, r11, pSortOrder) > 0)
                 return true;
             else
                 return false;
