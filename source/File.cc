@@ -1,13 +1,14 @@
 #include "File.h"
 #include "TwoWayList.cc"
 
+#include<stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
 #include <iostream>
-#include <stdlib.h>
 #include <unistd.h>
+
 
 
 Page :: Page () {
@@ -26,9 +27,6 @@ Page :: ~Page () {
 	delete myRecs;
 }
 
-int Page :: GetNumRecs () {
-	return numRecs;
-}
 
 void Page :: EmptyItOut () {
 
@@ -112,6 +110,7 @@ void Page :: FromBinary (char *bits) {
 
 	// first read the number of records on the page
 	numRecs = ((int *) bits)[0];
+	//subi //cerr << " numRecs in page " << numRecs << endl;
 
 	// sanity check
 	if (numRecs > 1000000 || numRecs < 0) {
@@ -169,6 +168,7 @@ void File :: GetPage (Page *putItHere, off_t whichPage) {
 
 	// this is because the first page has no data
 	whichPage++;
+	//subi// cerr << "get_pg " << whichPage << " file_sz " << curLength << endl;
 
 	if (whichPage >= curLength) {
 		cerr << "whichPage " << whichPage << " length " << curLength << endl;
@@ -265,6 +265,11 @@ void File :: Open (int fileLen, char *fName) {
 
 }
 
+
+// Added during Porject_1 to move to the top of the file                                                                                                                
+long File :: MoveFirst(){                                                                                                                                               
+  return lseek (myFilDes, 0, SEEK_SET);                                                                                                                                 
+}
 
 off_t File :: GetLength () {
 	return curLength;

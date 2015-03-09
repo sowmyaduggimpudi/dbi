@@ -39,8 +39,6 @@ all : $(TESTS)
 check : all
 	$(USER_DIR)
 
-clean :
-	rm -f $(TESTS) gtest.a gtest_main.a *.o
 
 # Builds gtest.a and gtest_main.a.
 
@@ -71,18 +69,22 @@ gtest_main.a : gtest-all.o gtest_main.o
 # function.
 
 
-unittest: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o unittest.o gtest-all.o gtest_main.o 
+unittest: Record.o Comparison.o ComparisonEngine.o Schema.o File.o HeapDBFile.o SortedDBFile.o GenDBFile.o DBFile.o y.tab.o lex.yy.o unittest.o gtest-all.o gtest_main.o HeapDBFile.o SortedDBFile.o GenDBFile.o Pipe.o BigQ.o 
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o$@
 	mv *.o bin/
 	mv unittest bin/
 	./bin/unittest
 
-test: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o
-	$(CC) -o bin/test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o -lfl
+test: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o HeapDBFile.o SortedDBFile.o GenDBFile.o
+	$(CC) -o bin/test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test.o HeapDBFile.o SortedDBFile.o GenDBFile.o -lfl -lpthread
 	rm -f *.o
 
-test2: BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test2.o
-	$(CC) -o bin/test2 BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test2.o -lfl -lpthread
+test2: BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test2.o HeapDBFile.o SortedDBFile.o GenDBFile.o
+	$(CC) -o bin/test2 BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o test2.o HeapDBFile.o SortedDBFile.o GenDBFile.o -lfl -lpthread
+	rm -f *.o
+
+a2-2test: BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o HeapDBFile.o SortedDBFile.o GenDBFile.o a2-2test.o
+	$(CC) -o bin/a2-2test BigQ.o Pipe.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o y.tab.o lex.yy.o HeapDBFile.o SortedDBFile.o GenDBFile.o a2-2test.o -lfl -lpthread
 	rm -f *.o
 
 main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o y.tab.o lex.yy.o main.o
@@ -104,6 +106,9 @@ BigQ.o: source/BigQ.cc
 test2.o: source/test2.cc
 	$(CC) -g -c source/test2.cc
 
+a2-2test.o: source/a2-2test.cc
+	$(CC) -g -c source/a2-2test.cc
+
 test.o: source/test.cc
 	$(CC) -g -c source/test.cc
 
@@ -118,6 +123,15 @@ ComparisonEngine.o: source/ComparisonEngine.cc
 	
 DBFile.o: source/DBFile.cc
 	$(CC) -g -c source/DBFile.cc
+
+GenDBFile.o: source/GenDBFile.cc
+	$(CC) -g -c source/GenDBFile.cc
+
+HeapDBFile.o: source/HeapDBFile.cc
+	$(CC) -g -c source/HeapDBFile.cc
+
+SortedDBFile.o: source/SortedDBFile.cc
+	$(CC) -g -c source/SortedDBFile.cc
 
 File.o: source/File.cc
 	$(CC) -g -c source/File.cc
@@ -138,9 +152,8 @@ lex.yy.o: source/Lexer.l
 	gcc  -c source/lex.yy.c
 
 clean: 
-	mv *.o bin/
-	rm -f *.o
-	rm -f *.out
+	rm -rf bin/*
 	rm -f y.tab.c
 	rm -f lex.yy.c
 	rm -f y.tab.h
+	rm -f $(TESTS) gtest.a gtest_main.a *.o

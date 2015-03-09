@@ -1,6 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H
-
+#include <stdlib.h>
+#include <string.h>
 
 #define MAX_ANDS 20
 #define MAX_ORS 20
@@ -11,10 +12,9 @@
 enum Target {Left, Right, Literal};
 enum CompOperator {LessThan, GreaterThan, Equals};
 enum Type {Int, Double, String};
-
+typedef enum {heap, sorted, tree} fType;
 
 unsigned int Random_Generate();
-
 
 #endif
 

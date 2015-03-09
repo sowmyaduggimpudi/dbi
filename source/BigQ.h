@@ -4,64 +4,54 @@
 #include <iostream>
 #include "Pipe.h"
 #include "File.h"
-#include <fstream>
-#include <stdlib.h>
 #include "Record.h"
-#include <vector>
-#include <algorithm>
-#include "DBFile.h"
-#include "Defs.h"
 
 using namespace std;
 
+struct SortInfo {
+  OrderMaker *myOrder;
+  int runLength;
+};
+/*
+ * Use temporary structure for passing multiple aruguments
+ * to worker thread
+ */
+struct threadParams {
+  Pipe *inPipe;
+  Pipe *outPipe;
+  OrderMaker *sortOrder;
+  int runLen;
+
+};
+typedef struct threadParams threadParams_t;
+
+class recOnVector {
+  public:
+    Record *currRecord;
+    int    currPageNumber;
+    int    currRunNumber;
+
+
+
+    recOnVector();
+    ~recOnVector();
+};
+
 class BigQ {
-private:
-Pipe *inPipe, *outPipe;
-OrderMaker *sortedOrder;
-int runLength;
-Page currPage;
-Page tempPage;
-int pageFilled;
-int pNum;
-int noOfRuns;
-//string 
-//ComparisionEngine
-//vector<int> 
-
-
-public:
-void insertInFile(vector<Record*>&);
-BigQ();
-File sortFile;
-string sortFileName;
-static void* beginSortProcess(void*);
-void internalSort();
-int mergeRuns();
-int minIndex(Record*, bool*);
-
-
-struct CompareMyRecords
-        {
-        OrderMaker *pSortOrder;
-                CompareMyRecords(OrderMaker *pOM): pSortOrder(pOM) {}
-
-        bool operator()(Record* const& r1, Record* const& r2)
-        {
-                Record* r11 = const_cast<Record*>(r1);
-            Record* r22 = const_cast<Record*>(r2);
-	
-            ComparisonEngine ce;
-            if (ce.Compare(r22, r11, pSortOrder) > 0)
-                return true;
-            else
-                return false;
-        }
-        };
-
 
 public:
 
-	BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen);
+
+  Pipe *inPipe;
+  Pipe *outPipe;
+  OrderMaker *sortOrder;
+  int runLen;
+
+	BigQ (Pipe &in,
+        Pipe &out,
+        OrderMaker &sortorder,
+        int runlen);
+
 	~BigQ ();
 };
 

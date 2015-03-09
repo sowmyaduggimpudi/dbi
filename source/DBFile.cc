@@ -5,129 +5,113 @@
 #include "Comparison.h"
 #include "ComparisonEngine.h"
 #include "DBFile.h"
+#include "HeapDBFile.h"
+#include "SortedDBFile.h"
+#include "GenDBFile.h"
 #include "Defs.h"
-#include <unistd.h>
+#include "BigQ.h"
+// hello
+using namespace std;
+#include <fstream>
+#include <iostream>
+#include <string.h>
 
+// stub file .. replace it with your own DBFile.cc
 
-DBFile::DBFile ()
-	:pNum(0), is_pDirty(false), mfile("")
-{
+DBFile::DBFile () {
 }
+
+
 
 int DBFile::Create (char *f_path, fType f_type, void *startup) {
-	if (mfile.empty()) {
-		mfile.append(f_path);
-		mfile.append(".metadata");
-	}
 
-	file.Open(0, f_path);
-	fileType = f_type;
-	if(fileType != heap) {
-		cerr << __func__ << "The file type is not heap\n";
-		return 0;
-	}
-
-	return 1;
+  switch(f_type) {
+    case heap:
+      {
+        gen_db_file_ptr = new HeapFile();
+      }
+      break;
+    case sorted:
+      {
+        gen_db_file_ptr = new SortedFile();
+      }
+      break;
+    case tree:
+      break;
+    default:
+      cerr<<"\n Unknown input file type";
+      exit(1);
+  }
+  return gen_db_file_ptr->Create(f_path, f_type, startup);
 }
 
-void DBFile::Load (Schema &f_schema, char *loadpath) {	
-	FILE *tblFile = fopen(loadpath, "r");	
-	Record temp;
+void DBFile::Load (Schema &f_schema, char *loadpath) {
 
-	while (temp.SuckNextRecord (&f_schema, tblFile) == 1)
-		Add(temp);
+  gen_db_file_ptr->Load(f_schema, loadpath);
 }
 
 int DBFile::Open (char *f_path) {
-	int f_type;
-	struct stat buff;
+  char path[100];
+  fType f_type;
 
-	if (mfile.empty()) {
-		mfile.append(f_path);
-		mfile.append(".metadata");
-	}
+  sprintf(path, "%s.metadata", f_path);
 
-	if (stat(mfile.c_str(), &buff) != 0) {
-		cerr << __func__ << "meta file doesn't exist\n";
-		return 0;
-	}
+  FILE *fptr = fopen(path, "r");
+  if(!fptr) {
+    fptr = fopen(path, "wr");
+    f_type = heap;
+    fwrite((int *)&f_type, 1, sizeof(int), fptr);
+  }else {
+    if(!fread(&f_type, 1, sizeof(int), fptr)) {
+      cerr<<"\n Read Error";
+      exit(1);
+    }
+  }
+  fclose(fptr);
 
-	ifstream mfile_ifs(mfile.c_str());
+  switch(f_type) {
+    case heap:
+      gen_db_file_ptr = new HeapFile();
+      break;
+    case sorted:
+      gen_db_file_ptr = new SortedFile();
+      break;
+    case tree:
+      break;
+    default:
+      cerr<<"\n Unknown input file type";
+      exit(1);
+  }
 
-	if (!mfile_ifs.is_open()) {
-		cerr << __func__ << "metadata file failed\n";
-		return 0;
-	}
-
-	mfile_ifs >> f_type;
-	fileType = (fType) f_type;
-	mfile_ifs >> pNum ;
-	mfile_ifs >> numPages;
-	file.Open(numPages, f_path);
-	mfile_ifs.close();
-
-	return 1;
-}
-
-void DBFile::MoveFirst () {
-	if (pNum == 0)
-		return;
-
-	if (is_pDirty)
-		file.AddPage(&currPage, pNum);	
-	pNum = 0;
-	file.GetPage(&currPage, pNum);
-	pNum++;
+  return gen_db_file_ptr->Open(f_path);
 }
 
 int DBFile::Close () {
-	if (is_pDirty) {
-		file.AddPage(&currPage, pNum);	
-		pNum++;
-	}
-	ofstream mfile_ofs(mfile.c_str());
+  /*
+   * Close .bin file
+   */
+  gen_db_file_ptr->Close();
+  delete gen_db_file_ptr;
+  gen_db_file_ptr = NULL;
+}
 
-	if (!mfile_ofs.is_open()) {
-		cerr << __func__<<": metadata file failed\n";
-		return 0;
-	}
-
-	numPages = file.Close();
-	mfile_ofs << fileType << endl;
-	mfile_ofs << pNum << endl;
-	mfile_ofs << numPages << endl;
-	mfile_ofs.close();
-	
-	return numPages;
+void DBFile::MoveFirst () {
+  gen_db_file_ptr->MoveFirst();
 }
 
 void DBFile::Add (Record &rec) {
-	is_pDirty = true;
-	if (!(currPage.Append(&rec))) {
-		file.AddPage(&currPage, pNum);	
-		pNum++;
-		currPage.EmptyItOut();
-		currPage.Append(&rec);
-	}
+  gen_db_file_ptr->Add(rec);
 }
 
-int DBFile::GetNext (Record &fetchme) {
-	if (currPage.GetFirst(&fetchme)) {
-		return 1;
-	} else {
-		if (pNum + 1 >= (file.GetLength()-1))
-			return 0;
-		pNum++;
-		file.GetPage(&currPage, pNum);
-		currPage.GetFirst(&fetchme);
-		return 1;
-	}
+int DBFile::GetNext (Record &fetchme)
+{
+  return gen_db_file_ptr->GetNext(fetchme);
 }
 
-int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
-	ComparisonEngine ceng;
-	while (GetNext(fetchme))
-		if (ceng.Compare(&fetchme, &literal, &cnf))
-			return 1;
-	return 0;
+int DBFile::GetNext (Record &fetchme, CNF &myComparison, Record &literal) {
+  return gen_db_file_ptr->GetNext(fetchme, myComparison, literal);
+}
+
+void DBFile::AppendSequential(Record &appendme){
+	gen_db_file_ptr->AppendSequential(appendme);
 }

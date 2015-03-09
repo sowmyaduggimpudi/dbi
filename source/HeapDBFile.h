@@ -1,5 +1,5 @@
-#ifndef DBFILE_H
-#define DBFILE_H
+#ifndef HEAP_FILE_H
+#define HEAP_FILE_H
 
 #include "TwoWayList.h"
 #include "Record.h"
@@ -10,13 +10,7 @@
 #include "GenDBFile.h"
 #include <fstream>
 
-// stub DBFile header..replace it with your own DBFile.h
-
-class GenDBFile;
-
-class DBFile {
-    GenDBFile *gen_db_file_ptr;
-#if 0
+class HeapFile:public GenDBFile {
     int       pageReadInProg; /* flag to indicate if page is read from file */
     int       currPageIndex;  /* Index of page currently being read */
     FILE      *dbFile;        /* Pointer to DB file */
@@ -27,9 +21,9 @@ class DBFile {
     Page      currPage;       /* Pointer to current page being read/written */
     File      currFile;       /* Pointer to current file being read/written */
     fstream   checkIsFileOpen;/* flag to check if file already open */
-#endif
+
 public:
-    DBFile ();
+    HeapFile ();
 
     int Create (char *fpath, fType file_type, void *startup);
     int Open (char *fpath);
@@ -42,6 +36,5 @@ public:
     int GetNext (Record &fetchme);
     int GetNext (Record &fetchme, CNF &cnf, Record &literal);
     void AppendSequential(Record &appendme);
-
 };
 #endif

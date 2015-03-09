@@ -1,5 +1,5 @@
-#ifndef DBFILE_H
-#define DBFILE_H
+#ifndef GEN_DB_FILE_H
+#define GEN_DB_FILE_H
 
 #include "TwoWayList.h"
 #include "Record.h"
@@ -7,16 +7,9 @@
 #include "File.h"
 #include "Comparison.h"
 #include "ComparisonEngine.h"
-#include "GenDBFile.h"
 #include <fstream>
 
-// stub DBFile header..replace it with your own DBFile.h
-
-class GenDBFile;
-
-class DBFile {
-    GenDBFile *gen_db_file_ptr;
-#if 0
+class GenDBFile {
     int       pageReadInProg; /* flag to indicate if page is read from file */
     int       currPageIndex;  /* Index of page currently being read */
     FILE      *dbFile;        /* Pointer to DB file */
@@ -27,21 +20,22 @@ class DBFile {
     Page      currPage;       /* Pointer to current page being read/written */
     File      currFile;       /* Pointer to current file being read/written */
     fstream   checkIsFileOpen;/* flag to check if file already open */
-#endif
+
 public:
-    DBFile ();
+    GenDBFile ();
+    virtual ~GenDBFile() =0;
 
-    int Create (char *fpath, fType file_type, void *startup);
-    int Open (char *fpath);
-    int Close ();
+    virtual int Create (char *fpath, fType file_type, void *startup)=0;
+    virtual int Open (char *fpath)=0;
+    virtual int Close ()=0;
 
-    void Load (Schema &myschema, char *loadpath);
+    virtual void Load (Schema &myschema, char *loadpath)=0;
 
-    void MoveFirst ();
-    void Add (Record &addme);
-    int GetNext (Record &fetchme);
-    int GetNext (Record &fetchme, CNF &cnf, Record &literal);
-    void AppendSequential(Record &appendme);
+    virtual void MoveFirst ()=0;
+    virtual void Add (Record &addme)=0;
+    virtual int GetNext (Record &fetchme)=0;
+    virtual int GetNext (Record &fetchme, CNF &cnf, Record &literal)=0;
+    virtual void AppendSequential(Record &appendme)=0;
 
 };
 #endif

@@ -41,7 +41,6 @@ public:
 
 	// empty it out
 	void EmptyItOut ();
-	int GetNumRecs();
 
 };
 
@@ -50,7 +49,7 @@ class File {
 private:
 
 	int myFilDes;
-	off_t curLength; 
+	off_t curLength; //this was private in Chris's version
 
 public:
 
@@ -77,6 +76,9 @@ public:
 
 	// closes the file and returns the file length (in number of pages)
 	int Close ();
+
+  //Added during project_1  to move to top of a file                                                                                                                    
+  long MoveFirst(); 
 
 };
 
