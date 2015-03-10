@@ -48,7 +48,7 @@ TEST(DBFileUnitTest, check_bin_metafile) {
 TEST(DBfileUnitTest, check_open_db_file_FAIL) {
 	struct stat buff;
 	static DBFile dbfile;
-	EXPECT_EQ(0, dbfile.Open(bin_fpath));
+	EXPECT_EQ(1, dbfile.Open(bin_fpath));
 	remove(bin_fpath);
 	remove(binm_fpath);
 }
