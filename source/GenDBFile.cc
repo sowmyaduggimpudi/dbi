@@ -38,7 +38,6 @@ void GenDBFile::MoveFirst () {
 }
 
 void GenDBFile::Add (Record &rec) {
-  cout<<"\n ===  GenDBFile::Add currMode: ===";
 }
 
 int GenDBFile::GetNext (Record &fetchme)
